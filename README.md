@@ -6,7 +6,7 @@ Deploy it https-only or isolated in a private virtual cloud
 
 POST {username: 'x', password 'y'} to /login and get a token in the response.  The token is based a private SSH key.  
 Multiple REST API servers can be deployed with the public key, can validate the tokens, and provide scalable,
-secure resources.
+secure resource-oriented architecture.
 
 That's the plan anyway!
 
