@@ -1,23 +1,42 @@
 'use strict';
 
 var gulp = require('gulp');
-var notify = require('gulp-notify');
-var jas = require('gulp-jasmine');
-var nodemon = require('gulp-nodemon');
-var nodeInspector = require('gulp-node-inspector');
+var util = require('gulp-util');
+var server = require('gulp-develop-server');
+var livereload = require('gulp-livereload');
 var jshint = require('gulp-jshint');
 var env = require('gulp-env');
+var fs = require('fs');
 
-gulp.task('set-env', function() {
-  env({
-    vars: {
-      NODE_PORT: 5100,
-      NODE_KEY_PATH: '../keys/foo',
-      NODE_SALT: 'akajakq*%^qi',
-      NODE_DB_PATH: '../db/auth',
-      NODE_DB_VERBOSE: true
-    }
-  });
+var salt = fs.readFileSync('../keys/salt.txt', 'utf8').trim();
+util.log('salt', salt);
+var listenOptions = {
+  path: './index.js',
+  env: {
+    NODE_PORT: 5100,
+    NODE_KEY_PATH: '../keys/id_rsa',
+    NODE_SALT: salt,
+    NODE_DB_PATH: '../db/auth',
+    NODE_DB_VERBOSE: true
+  }
+};
+
+var serverFiles = [
+  './*.js',
+  '!./gulpfile.js'
+];
+
+gulp.task('server:start', function() {
+  server.listen(listenOptions, livereload.listen);
+});
+
+gulp.task('default', ['lint', 'server:start'], function() {
+  function restart(file) {
+    server.changed(function(error) {
+      if (!error) livereload.changed(file.path);
+    });
+  }
+  gulp.watch(serverFiles, ['lint']).on('change', restart);
 });
 
 gulp.task('lint', function() {
@@ -25,27 +44,4 @@ gulp.task('lint', function() {
     .pipe(jshint('./.jshintrc'))
     .pipe(jshint.reporter('default'))
     .pipe(jshint.reporter('fail'));
-});
-
-gulp.task('develop', ['lint', 'set-env'], function (done) {
-  nodemon({
-    script: './index.js',
-    ext: 'html js',
-    ignore: ['gulpfile.js'],
-    tasks: ['lint']
-  }).on('restart', function () {
-    console.log('restarted!');
-  });
-  done();
-});
-
-gulp.task('debug', ['lint', 'set-env'], function (done) {
-  return gulp.src('./server.js, *.js')
-  	.pipe(nodeInspector());
-});
-
-gulp.task('test', ['lint'], function () {
-	return gulp.src('spec/tool_spec.js')
-  	// gulp-jasmine works on filepaths so you can't have any plugins before it
-  	.pipe(jas());
 });

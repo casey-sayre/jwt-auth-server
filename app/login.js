@@ -2,14 +2,7 @@
 
 var jwt = require('jsonwebtoken');
 var fs = require('fs');
-var logger = require('./logger');
-
-var encrypt = function(password, salt) {
-  var crypto = require('crypto');
-  return crypto.createHmac('sha1', salt)
-      .update(password)
-      .digest('hex');
-};
+var util = require('util');
 
 module.exports = function(opts) {
 
@@ -18,13 +11,13 @@ module.exports = function(opts) {
     var databasePath = opts.databasePath;
     var databaseVerbose = opts.databaseVerbose;
     var keyPath = opts.keyPath;
-    var salt = opts.salt;
+    var encrypt = require('./encrypt')(opts);
 
     var sqlite3 = require('sqlite3');
     if (databaseVerbose) sqlite3.verbose();
     var db = new sqlite3.Database(databasePath);
     var givenUsername = req.body.username;
-    var qry = 'select * from users where username="' + givenUsername + '"';
+    var qry = util.format('select * from users where username="%s"', givenUsername); // NOTE: Escape
     var authUser = null;
     db.get(qry, function(error, row) {
       authUser = row;
@@ -38,7 +31,7 @@ module.exports = function(opts) {
           error: 'unknown user'
         });
       }
-      var givenPassword = encrypt(req.body.password, salt);
+      var givenPassword = encrypt(req.body.password);
       if (givenPassword !== authUser.password) {
         return res.status(401).json({
           user: req.body.username,

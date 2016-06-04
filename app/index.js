@@ -14,6 +14,8 @@ app.use(bodyParser.json());
 
 var router = express.Router();
 
+logger.info('index', process.env.NODE_KEY_PATH);
+
 var login = require('./login');
 router.post('/login', login({
   keyPath: process.env.NODE_KEY_PATH,

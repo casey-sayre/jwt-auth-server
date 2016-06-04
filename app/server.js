@@ -12,10 +12,4 @@ module.exports = function(opts) {
     var port = server.address().port;
     logger.info('listening at http://%s:%s', host, port);
   });
-  var shutdown = function(signalEvent) {
-    logger.info('shutdown from %s',signalEvent);
-    process.exit();
-  };
-  process.on('SIGTERM', function() { shutdown('SIGTERM'); } );
-  process.on('SIGINT', function() { shutdown('SIGINT'); } );
 };
