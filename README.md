@@ -2,13 +2,9 @@
 
 ## JSON Web Token Authentication REST Server
 
-Deploy it https-only or isolated in a private virtual cloud
-
-POST {username: 'x', password 'y'} to /login and get a token in the response.  The token is based a private SSH key.  
-Multiple REST API servers can be deployed with the public key, can validate the tokens, and provide scalable,
-secure resource-oriented architecture.
-
-That's the plan anyway!
+POST {"username": "x", "password": "y"} to /login and get a token, based on a private SSH key, in the response.  After
+this one-time authentication, clients can store the token and pass it using the Bearer schema in the authorization header when requesting resources.  API servers equipped with the corresponding public key can validate the token and properly
+expose resources based on the username (provided in the token's payload) and any associated permissioning..
 
 ## Overview
 ```
@@ -33,6 +29,8 @@ jwt-auth-server/
 └── util
     └── hasher.js
 ```
-**db/auth** is a sqlite3 database with a table "users" to keep usernames and hashed passwords for authentication.  **db/auth.schema.sql** holds the schema for the table.  Notice **util/hasher.js** -- it lets you hash passwords from the command line to set up some initial users.
+The little bit of configuration is done via the process environment.  For development this is handled in **app/gulpfile.js**.
+
+**db/auth** is a sqlite3 database with a table "users" to keep usernames and hashed passwords for authentication.  **db/auth.schema.sql** holds the schema for the table.  Notice **util/hasher.js** -- it lets you hash passwords from the command line in order to seed the auth database with some initial users.
 
 the **keys/** directory is where to keep the salt string and SSH keys for encrypting.  The public key, **id_rsa.pub**, is not used by this auth server.  github help has a good guide for generating SSH keys. **salt.txt** should be a one-line, one-word text file with random text.
