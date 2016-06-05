@@ -3,6 +3,7 @@
 var jwt = require('jsonwebtoken');
 var fs = require('fs');
 var util = require('util');
+var logger = require('./logger');
 
 module.exports = function(opts) {
 
@@ -13,12 +14,15 @@ module.exports = function(opts) {
     'changePasswordNow'
   ].join(','));
 
-  return function(req, res, next) {
+  var databasePath = opts.databasePath;
+  var databaseVerbose = opts.databaseVerbose;
+  var keyPath = opts.keyPath;
 
-    var databasePath = opts.databasePath;
-    var databaseVerbose = opts.databaseVerbose;
-    var keyPath = opts.keyPath;
-    var encrypt = require('./encrypt')(opts);
+  var encrypt = require('./encrypt')(opts);
+
+  var cert = fs.readFileSync(keyPath);
+
+  return function(req, res, next) {
 
     var sqlite3 = require('sqlite3');
     if (databaseVerbose) sqlite3.verbose();
@@ -29,7 +33,10 @@ module.exports = function(opts) {
       authUserRecord = row;
       db.close();
       if (error) {
-        return res.status(500).json({error:error, message: 'authenticateServer received sqlite3 error'});
+        logger.error(error);
+        return res.status(500).json({
+          error: 'authenticationServer received sqlite3 error'
+        });
       }
       if (!authUserRecord) {
         return res.status(401).json({
@@ -44,10 +51,10 @@ module.exports = function(opts) {
           error: 'password incorrect'
         });
       }
-      var cert = fs.readFileSync(keyPath);
-      var token = jwt.sign({
+      var payload = {
         username: givenUsername
-      }, cert, {algorithm: 'RS256'});
+      };
+      var token = jwt.sign(payload, cert, {algorithm: 'RS256'});
       res.json({
         username: givenUsername,
         token: token
