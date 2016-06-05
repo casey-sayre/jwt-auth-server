@@ -2,9 +2,8 @@
 
 var logger = require('./logger');
 
-module.exports = function(opts) {
+module.exports = function(app, opts) {
 
-  var app = opts.app;
   var port = opts.port;
 
   var server = app.listen(port, function() {

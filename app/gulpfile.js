@@ -1,7 +1,6 @@
 'use strict';
 
 var gulp = require('gulp');
-var util = require('gulp-util');
 var server = require('gulp-develop-server');
 var livereload = require('gulp-livereload');
 var jshint = require('gulp-jshint');
@@ -9,7 +8,6 @@ var env = require('gulp-env');
 var fs = require('fs');
 
 var salt = fs.readFileSync('../keys/salt.txt', 'utf8').trim();
-util.log('salt', salt);
 var listenOptions = {
   path: './index.js',
   env: {
@@ -26,11 +24,11 @@ var serverFiles = [
   '!./gulpfile.js'
 ];
 
-gulp.task('server:start', function() {
+gulp.task('startServer', function() {
   server.listen(listenOptions, livereload.listen);
 });
 
-gulp.task('default', ['lint', 'server:start'], function() {
+gulp.task('default', ['lint', 'startServer'], function() {
   function restart(file) {
     server.changed(function(error) {
       if (!error) livereload.changed(file.path);
@@ -41,7 +39,7 @@ gulp.task('default', ['lint', 'server:start'], function() {
 
 gulp.task('lint', function() {
   gulp.src('./*.js')
-    .pipe(jshint('./.jshintrc'))
+    .pipe(jshint('../.jshintrc'))
     .pipe(jshint.reporter('default'))
     .pipe(jshint.reporter('fail'));
 });

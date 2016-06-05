@@ -6,6 +6,13 @@ var util = require('util');
 
 module.exports = function(opts) {
 
+  var usersQryString = util.format('select %s from users where username=?', [
+    'username',
+    'password',
+    'admin',
+    'changePasswordNow'
+  ].join(','));
+
   return function(req, res, next) {
 
     var databasePath = opts.databasePath;
@@ -17,33 +24,32 @@ module.exports = function(opts) {
     if (databaseVerbose) sqlite3.verbose();
     var db = new sqlite3.Database(databasePath);
     var givenUsername = req.body.username;
-    var qry = util.format('select * from users where username="%s"', givenUsername); // NOTE: Escape
-    var authUser = null;
-    db.get(qry, function(error, row) {
-      authUser = row;
+    var authUserRecord = null;
+    db.get(usersQryString, givenUsername, function(error, row) {
+      authUserRecord = row;
       db.close();
       if (error) {
         return res.status(500).json({error:error, message: 'authenticateServer received sqlite3 error'});
       }
-      if (!authUser) {
+      if (!authUserRecord) {
         return res.status(401).json({
-          user: req.body.username,
+          user: givenUsername,
           error: 'unknown user'
         });
       }
       var givenPassword = encrypt(req.body.password);
-      if (givenPassword !== authUser.password) {
+      if (givenPassword !== authUserRecord.password) {
         return res.status(401).json({
-          user: req.body.username,
+          user: givenUsername,
           error: 'password incorrect'
         });
       }
       var cert = fs.readFileSync(keyPath);
       var token = jwt.sign({
-        username: req.body.username
+        username: givenUsername
       }, cert, {algorithm: 'RS256'});
       res.json({
-        username: req.body.username,
+        username: givenUsername,
         token: token
       });
     });
