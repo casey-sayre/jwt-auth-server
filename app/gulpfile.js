@@ -18,6 +18,7 @@ var listenOptions = {
     NODE_DB_VERBOSE: true
   }
 };
+livereload.options.port = 35730;
 
 var serverFiles = [
   './*.js',
