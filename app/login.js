@@ -24,6 +24,11 @@ module.exports = function(opts) {
 
   return function(req, res, next) {
 
+    if (!req.body || !req.body.username || !req.body.password) {
+      return res.status(401).json({
+        error: 'invalid request'
+      });
+    }
     var sqlite3 = require('sqlite3');
     if (databaseVerbose) sqlite3.verbose();
     var db = new sqlite3.Database(databasePath);
